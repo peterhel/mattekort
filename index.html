@@ -1,0 +1,222 @@
+<html>
+
+<body>
+    <div id="header" style="display:flex; height:100px">
+        <div id="correct" style="background-color:lightgreen; width:100%; color:white;text-align:center;font-size:5em">0
+        </div>
+        <div id="wrong" style="background-color:lightcoral; width:100%; color:white;text-align:center;font-size:5em">0
+        </div>
+    </div>
+    <div id="app">
+        <div id="question">? + ? = ?</div>
+    </div>
+    <script>
+        const classLists = []
+
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+
+            // While there remain elements to shuffle.
+            while (currentIndex > 0) {
+
+                // Pick a remaining element.
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+
+                // And swap it with the current element.
+                [array[currentIndex], array[randomIndex]] = [
+                    array[randomIndex], array[currentIndex]];
+            }
+
+            return array;
+        }
+        const appEl = document.querySelector('#app')
+        const correctEl = document.querySelector('#correct')
+        const wrongEl = document.querySelector('#wrong')
+        let qualifiers = [['+', x => x * 1], ['-', x => x * -1]]
+        let questions = []
+        for (let qual of qualifiers) {
+            for (let i = 0; i <= 10; i++) {
+                for (let j = 0; j <= 10; j++) {
+                    let a = i, b = j;
+                    let c = a + qual[1](b)
+                    if (c > -1 && c <= 10)
+                        questions.push([`${a} ${qual[0]} ${b}`, { q: qual[0], a: a, b: b, c: c }])
+
+                    if(i == j)
+                        continue
+
+                    c = b + qual[1](a)
+                    if (c > -1 && c <= 10)
+                        questions.push([`${b} ${qual[0]} ${a}`, { q: qual[0], a: b, b: a, c: c }]) 
+
+                }
+            }
+        }
+
+        questions = shuffle(questions)
+        console.log(questions.map(x => x[0]))
+        currentQuestion = null;
+        let q = document.querySelector('#question')
+        classLists.push(q.classList)
+
+        function nextQuestion() {
+            correctEl.innerText = correct.length
+            wrongEl.innerText = wrong.length
+
+            currentQuestion = questions.pop()
+            if (currentQuestion == null)
+                alert('klar')
+            let [text, conf] = currentQuestion
+            q.innerText = `${text} = ?`
+
+            if (conf.q === '+') {
+                classLists.forEach(x => {
+                    x.add('plus')
+                    x.remove('minus')
+                })
+            } else {
+                classLists.forEach(x => {
+                    x.add('minus')
+                    x.remove('plus')
+                })
+            }
+        }
+
+        const correct = []
+        const wrong = []
+        const thumbImg = document.createElement('img');
+        thumbImg.src = 'thumb.webp'
+        thumbImg.style.position = 'absolute';
+        thumbImg.style.left= window.innerWidth/2 + 'px'
+        thumbImg.style.top = '20vh'
+        thumbImg.style.width = 0
+        thumbImg.style.height = 0
+        document.body.appendChild(thumbImg)
+
+        thumbImg.addEventListener('animationend', e => {
+            thumbImg.style.animation = ''
+            nextQuestion()
+        })
+
+        function animateCorrect(el, _question) {
+            //debugger;
+            thumbImg.style.left = el.x + 'px';
+            thumbImg.style.top = el.y + 'px';
+            thumbImg.style.animation = 'rl 2s 1 ease-out';
+        }
+
+        function animateWrong(el, _question) {
+            setTimeout(nextQuestion, 2000)
+        }
+
+        function answer(e, number) {
+            q.innerText = q.innerText.slice(0, -1) + currentQuestion[1].c
+
+            if (currentQuestion[1].c === number) {
+                correct.push(currentQuestion)
+                animateCorrect(e, currentQuestion)
+            } else {
+                wrong.push(currentQuestion)
+                animateWrong(e, currentQuestion)
+            }
+        }
+
+        function load() {
+            let qb = q.getBoundingClientRect()
+            q.style.left = `${(window.innerWidth - qb.width) / 2}px`
+            q.style.top = `${(window.innerHeight - qb.height) / 2}px`
+            qb = q.getBoundingClientRect()
+
+            let left = qb.left
+            let width = 78
+            let pad = (qb.width - width-2) / 4
+
+            for (let i = 0; i < 10; i++) {
+                let height = 78;
+                console.log(left)
+                let y = qb.top - (height+12) + ((qb.height + height + 22) * (i / 5 | 0))
+                let numberEl = document.createElement('div');
+                numberEl.style.position = 'absolute'
+                numberEl.style.width = width + 'px'
+                numberEl.style.height = height + 'px'
+                numberEl.style.left = left + 'px'
+                numberEl.style.top = y + 'px'
+                numberEl.className = 'number'
+                classLists.push(numberEl.classList)
+                numberEl.addEventListener('click', e => answer(e, i))
+
+                numberEl.innerText = `${i}`;
+                console.log(i)
+                appEl.appendChild(numberEl)
+                left += (pad)
+                if (i == 4)
+                    left = qb.left
+            }
+
+            nextQuestion()
+        }
+        window.addEventListener('load', load)
+    </script>
+    <style>
+        @font-face {
+            font-family: 'Short_Stack variant0';
+            src: url(https://fonts.gstatic.com/s/shortstack/v15/bMrzmS2X6p0jZC6EcmPFX9SVe34h0Wq7.woff2) format('woff2');
+           }
+        body {
+            font-family: "Short_Stack variant0", Tofu;
+        }
+        #question {
+            position: absolute;
+
+            border: 1px solid black;
+            text-align: center;
+            font-size: 6em;
+            width: 80vw;
+            height: 2em;
+            padding-top: 1em;
+        }
+
+        .minus {
+            background-color: lightpink;
+        }
+
+        .plus {
+            background-color: lightyellow;
+        }
+
+        .number {
+            padding-top: 2px;
+            font-size: 4em;
+            text-align: center;
+            border: 1px solid black;
+        }
+
+        @keyframes rl { 		    			    			    			    
+            10% {
+                margin-top:-100px;
+                margin-left:-100px;
+                height: 200px;
+                width:165px
+            }
+            50% {
+                margin-top:-100px;
+                margin-left:-100px;
+                height: 200px;
+                width:165px
+            }
+            90% {
+                margin-top:-100px;
+                margin-left:-100px;
+                height: 200px;
+                width:165px
+            }
+            100% {
+                height: 0;
+                width:0
+            }
+          }
+    </style>
+</body>
+
+</html>
