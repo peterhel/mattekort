@@ -9,6 +9,7 @@
     </div>
     <div id="app">
         <div id="question">? + ? = ?</div>
+        <div id="answers"></div>
     </div>
     <script>
         const classLists = []
@@ -43,12 +44,12 @@
                     if (c > -1 && c <= 10)
                         questions.push([`${a} ${qual[0]} ${b}`, { q: qual[0], a: a, b: b, c: c }])
 
-                    if(i == j)
+                    if (i == j)
                         continue
 
                     c = b + qual[1](a)
                     if (c > -1 && c <= 10)
-                        questions.push([`${b} ${qual[0]} ${a}`, { q: qual[0], a: b, b: a, c: c }]) 
+                        questions.push([`${b} ${qual[0]} ${a}`, { q: qual[0], a: b, b: a, c: c }])
 
                 }
             }
@@ -58,6 +59,7 @@
         console.log(questions.map(x => x[0]))
         currentQuestion = null;
         let q = document.querySelector('#question')
+        let a = document.querySelector('#answers')
         classLists.push(q.classList)
 
         function nextQuestion() {
@@ -88,7 +90,7 @@
         const thumbImg = document.createElement('img');
         thumbImg.src = 'thumb.webp'
         thumbImg.style.position = 'absolute';
-        thumbImg.style.left= window.innerWidth/2 + 'px'
+        thumbImg.style.left = window.innerWidth / 2 + 'px'
         thumbImg.style.top = '20vh'
         thumbImg.style.width = 0
         thumbImg.style.height = 0
@@ -124,31 +126,31 @@
 
         function load() {
             let qb = q.getBoundingClientRect()
-            q.style.left = `${(window.innerWidth - qb.width) / 2}px`
-            q.style.top = `${(window.innerHeight - qb.height) / 2}px`
+            //q.style.left = `${(window.innerWidth - qb.width) / 2}px`
+            // q.style.top = `${(window.innerHeight - qb.height) / 2}px`
             qb = q.getBoundingClientRect()
 
             let left = qb.left
             let width = 78
-            let pad = (qb.width - width-2) / 4
+            let pad = (qb.width - width - 2) / 4
 
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i <= 10; i++) {
                 let height = 78;
                 console.log(left)
-                let y = qb.top - (height+12) + ((qb.height + height + 22) * (i / 5 | 0))
+                let y = qb.top - (height + 12) + ((qb.height + height + 22) * (i / 5 | 0))
                 let numberEl = document.createElement('div');
-                numberEl.style.position = 'absolute'
+                { {/*  numberEl.style.position = 'absolute'  */ } }
                 numberEl.style.width = width + 'px'
                 numberEl.style.height = height + 'px'
-                numberEl.style.left = left + 'px'
-                numberEl.style.top = y + 'px'
+                { {/*  numberEl.style.left = left + 'px'  */ } }
+                { {/*  numberEl.style.top = y + 'px'  */ } }
                 numberEl.className = 'number'
                 classLists.push(numberEl.classList)
                 numberEl.addEventListener('click', e => answer(e, i))
 
                 numberEl.innerText = `${i}`;
                 console.log(i)
-                appEl.appendChild(numberEl)
+                a.appendChild(numberEl)
                 left += (pad)
                 if (i == 4)
                     left = qb.left
@@ -159,16 +161,24 @@
         window.addEventListener('load', load)
     </script>
     <style>
+        #app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
         @font-face {
             font-family: 'Short_Stack variant0';
             src: url(https://fonts.gstatic.com/s/shortstack/v15/bMrzmS2X6p0jZC6EcmPFX9SVe34h0Wq7.woff2) format('woff2');
-           }
+        }
+
         body {
             font-family: "Short_Stack variant0", Tofu;
         }
-        #question {
-            position: absolute;
 
+        #question {
+            /*  position: absolute;  */
+            margin-top: 30px;
             border: 1px solid black;
             text-align: center;
             font-size: 6em;
@@ -192,30 +202,42 @@
             border: 1px solid black;
         }
 
-        @keyframes rl { 		    			    			    			    
+        #answers {
+            width: 80vw;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            justify-content: space-between;
+        }
+
+        @keyframes rl {
             10% {
-                margin-top:-100px;
-                margin-left:-100px;
+                margin-top: -100px;
+                margin-left: -100px;
                 height: 200px;
-                width:165px
+                width: 165px
             }
+
             50% {
-                margin-top:-100px;
-                margin-left:-100px;
+                margin-top: -100px;
+                margin-left: -100px;
                 height: 200px;
-                width:165px
+                width: 165px
             }
+
             90% {
-                margin-top:-100px;
-                margin-left:-100px;
+                margin-top: -100px;
+                margin-left: -100px;
                 height: 200px;
-                width:165px
+                width: 165px
             }
+
             100% {
                 height: 0;
-                width:0
+                width: 0
             }
-          }
+        }
     </style>
 </body>
 
