@@ -1,5 +1,9 @@
 <html>
 
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
 <body>
     <div id="header" style="display:flex; height:100px">
         <div id="correct" style="background-color:lightgreen; width:100%; color:white;text-align:center;font-size:5em">0
@@ -8,7 +12,9 @@
         </div>
     </div>
     <div id="app">
-        <div id="question">? + ? = ?</div>
+        <div id="question-wrapper">
+            <div id="question">? + ? = ?</div>
+        </div>
         <div id="answers"></div>
     </div>
     <script>
@@ -68,7 +74,10 @@
 
             currentQuestion = questions.pop()
             if (currentQuestion == null)
-                alert('klar')
+                {
+                    q.innerText = 'KLAR!'
+                    return;
+                }
             let [text, conf] = currentQuestion
             q.innerText = `${text} = ?`
 
@@ -112,7 +121,12 @@
             setTimeout(nextQuestion, 2000)
         }
 
+        let started = null
+
         function answer(e, number) {
+            if(started === null) 
+                started = Date.now()
+
             q.innerText = q.innerText.slice(0, -1) + currentQuestion[1].c
 
             if (currentQuestion[1].c === number) {
@@ -121,6 +135,12 @@
             } else {
                 wrong.push(currentQuestion)
                 animateWrong(e, currentQuestion)
+            }
+
+            let elapsed = Date.now() - started
+
+            if(elapsed > 1000 * 60 * 5) {
+                questions.splice(0, questions.length, wrong.pop())
             }
         }
 
@@ -131,11 +151,11 @@
             qb = q.getBoundingClientRect()
 
             let left = qb.left
-            let width = 78
+            let width = 68
             let pad = (qb.width - width - 2) / 4
 
             for (let i = 0; i <= 10; i++) {
-                let height = 78;
+                let height = 68;
                 console.log(left)
                 let y = qb.top - (height + 12) + ((qb.height + height + 22) * (i / 5 | 0))
                 let numberEl = document.createElement('div');
@@ -176,15 +196,19 @@
             font-family: "Short_Stack variant0", Tofu;
         }
 
-        #question {
-            /*  position: absolute;  */
+        #question-wrapper {
             margin-top: 30px;
             border: 1px solid black;
             text-align: center;
-            font-size: 6em;
             width: 80vw;
-            height: 2em;
-            padding-top: 1em;
+            display: flex;
+            align-content: center;
+            flex-direction: column;
+        }
+
+        #question {
+            height: 100%;
+            font-size: 3rem;
         }
 
         .minus {
@@ -197,7 +221,7 @@
 
         .number {
             padding-top: 2px;
-            font-size: 4em;
+            font-size: 3rem;
             text-align: center;
             border: 1px solid black;
         }
