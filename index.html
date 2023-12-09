@@ -75,7 +75,7 @@
             currentQuestion = questions.pop()
             if (currentQuestion == null)
                 {
-                    q.innerText = 'KLAR!'
+                    q.innerText = 'Bra jobbat!!'
                     return;
                 }
             let [text, conf] = currentQuestion
@@ -97,7 +97,6 @@
         const correct = []
         const wrong = []
         const thumbImg = document.createElement('img');
-        thumbImg.src = 'thumb.webp'
         thumbImg.style.position = 'absolute';
         thumbImg.style.left = window.innerWidth / 2 + 'px'
         thumbImg.style.top = '20vh'
@@ -111,14 +110,17 @@
         })
 
         function animateCorrect(el, _question) {
-            //debugger;
-            thumbImg.style.left = el.x + 'px';
-            thumbImg.style.top = el.y + 'px';
-            thumbImg.style.animation = 'rl 2s 1 ease-out';
+            thumbImg.src = 'thumb.webp';
+            thumbImg.style.left = (el.x + 25) + 'px';
+            thumbImg.style.top = (el.y - 35) + 'px';
+            thumbImg.style.animation = 'rl 1s 1 ease-out';
         }
 
         function animateWrong(el, _question) {
-            setTimeout(nextQuestion, 2000)
+            thumbImg.src = 'poop.gif';
+            thumbImg.style.left = el.x + 'px';
+            thumbImg.style.top = el.y + 'px';
+            thumbImg.style.animation = 'poop 1s 1 ease-out';
         }
 
         let started = null
@@ -237,24 +239,51 @@
 
         @keyframes rl {
             10% {
-                margin-top: -100px;
-                margin-left: -100px;
-                height: 200px;
-                width: 165px
+                margin-top: -66px;
+                margin-left: -80px;
+                height: 160px;
+                width: 132px
             }
 
             50% {
-                margin-top: -100px;
-                margin-left: -100px;
-                height: 200px;
-                width: 165px
+                margin-top: -66px;
+                margin-left: -80px;
+                height: 160px;
+                width: 132px
             }
 
             90% {
-                margin-top: -100px;
-                margin-left: -100px;
-                height: 200px;
-                width: 165px
+                margin-top: -66px;
+                margin-left: -80px;
+                height: 160px;
+                width: 132px
+            }
+
+            100% {
+                height: 0;
+                width: 0
+            }
+        }
+        @keyframes poop {
+            10% {
+                margin-top: -80px;
+                margin-left: -80px;
+                height: 160px;
+                width: 160px
+            }
+
+            50% {
+                margin-top: -80px;
+                margin-left: -80px;
+                height: 160px;
+                width: 160px
+            }
+
+            90% {
+                margin-top: -80px;
+                margin-left: -80px;
+                height: 160px;
+                width: 160px
             }
 
             100% {
