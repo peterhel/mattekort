@@ -137,16 +137,16 @@
             newCtx.fillStyle = "black";
             newCtx.fillText("8", rightMost, downMost);
 
-            { {/*  const url = newCanvas.toDataURL('image/jpeg', .5)  */ } }
-            const url = elCanvas.toDataURL('image/png', .5)
-            const bytes = await new Promise(x => elCanvas.toBlob(x, 'image/jpeg'))
+            const url = elCanvas.toDataURL('image/jpeg', 1)
+            {{/*  const url = elCanvas.toDataURL('image/png', .5)  */}}
+            {{/*  const bytes = await new Promise(x => elCanvas.toBlob(x, 'image/jpeg'))  */}}
             { {/*  location.href = url  */ } }
 
             rightMost = 0
             downMost = 0
 
-            const formData = new FormData()
-            formData.append('query', bytes)
+            {{/*  const formData = new FormData()  */}}
+            {{/*  formData.append('query', bytes)  */}}
 
             { {/*  await fetch('https://kvcc62euei75227hmvzq3aisvq0esvth.lambda-url.eu-central-1.on.aws/', {   */ } }
             {{/*  let response = await fetch('/textract', {
@@ -162,7 +162,7 @@
                 {{/*  const number = prompt('Vilken siffra är det?')  */}}
                 let response = await fetch(`/textract/${currentQuestion[1].c}`, {
                     method: 'post',
-                    body: formData
+                    body: url
                 })
                 {{/*  answer({ y: 100, x: 100 }, parseInt(number))  */}}
             {{/*  }  */}}
