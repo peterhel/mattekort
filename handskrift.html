@@ -1,0 +1,453 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+    <div id="header" style="display:flex; height:100px">
+        <div id="correct" style="background-color:lightgreen; width:100%; color:white;text-align:center;font-size:5em">0
+        </div>
+        <div id="wrong" style="background-color:lightcoral; width:100%; color:white;text-align:center;font-size:5em">0
+        </div>
+    </div>
+    <div id="app">
+        <div id="question-wrapper">
+            <div id="question">? + ? = ?</div>
+        </div>
+        <div id="answers">
+            <canvas width="224" height="224" style="border:1px solid black" id="answer"></canvas>
+        </div>
+    </div>
+    <script>
+        const classLists = []
+        const elCanvas = document.getElementById('answer');
+        var ctx = elCanvas.getContext('2d');
+
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, elCanvas.width, elCanvas.height);
+
+        let polygons = [[]]
+        let drawing = false;
+
+        let rightMost = 0
+        let downMost = 0
+
+        let endDrawTimeout = null
+
+        function draw(e) {
+            {{/*  e.preventDefault()  */}}
+
+            let clientX, clientY;
+            if(e.touches) {
+                clientX = e.touches[0].clientX
+                clientY = e.touches[0].clientY
+            } else {
+                clientX = e.clientX
+                clientY = e.clientY
+            }
+
+            console.log(clientX, clientY)
+
+            const rect = e.target.getBoundingClientRect()
+            if (drawing) {
+                {
+                    {/*  setTimeout(() => {
+                    window.requestAnimationFrame(draw)
+                }, 50)  */}
+                }
+            } else {
+                console.log('drawing ended')
+                return;
+            }
+
+            const mX = clientX - rect.x - 4
+            const mY = clientY - rect.y - 4
+
+            polygons[polygons.length - 1].push([mX, mY]);
+
+            if (rightMost < mY) {
+                rightMost = mY
+            }
+            if (downMost < mX) {
+                downMost = mX
+            }
+
+            ctx.clearRect(0, 0, elCanvas.width, elCanvas.height);
+
+            console.log(polygons.length)
+
+            for (let pixels of polygons) {
+                const [prev, curr] = pixels.slice(-2)
+                ctx.moveTo(prev[0], prev[1]);
+                ctx.lineTo(curr[0], curr[1]);
+
+                ctx.stroke()
+            }
+        }
+
+        async function endDraw() {
+            polygons.splice(0, polygons.length)
+
+            console.log(rightMost, downMost)
+
+            const newCanvas = document.createElement('canvas');
+            newCanvas.width = 600
+            newCanvas.height = 400
+
+            const newCtx = newCanvas.getContext('2d');
+
+            newCtx.fillStyle = "white";
+            newCtx.fillRect(0, 0, newCanvas.width, newCanvas.height);
+
+            drawing = false;
+
+            const writtenDigit = ctx.getImageData(0, 0, elCanvas.width, elCanvas.height); //initialImageData stores a reference to data, but I need a copy
+
+
+            newCtx.putImageData(writtenDigit, 0, 0);
+
+            newCtx.font = `${downMost}px Short_Stack variant0`;
+            newCtx.fillStyle = "black";
+            newCtx.fillText("8", rightMost, downMost);
+
+            { {/*  const url = newCanvas.toDataURL('image/jpeg', .5)  */ } }
+            const url = elCanvas.toDataURL('image/png', .5)
+            const bytes = await new Promise(x => elCanvas.toBlob(x))
+            { {/*  location.href = url  */ } }
+
+            rightMost = 0
+            downMost = 0
+
+            const formData = new FormData()
+            formData.append('query', bytes)
+
+            { {/*  await fetch('https://kvcc62euei75227hmvzq3aisvq0esvth.lambda-url.eu-central-1.on.aws/', {   */ } }
+            let response = await fetch('/textract', {
+                method: 'post',
+                body: formData
+            })
+
+            ctx.clearRect(0, 0, elCanvas.width, elCanvas.height);
+            ctx.beginPath();//ADD THIS LINE!<<<<<<<<<<<<<
+
+            let data = await response.json()
+            if (!data.success) {
+                const number = prompt('Vilken siffra är det?')
+                let response = await fetch(`/textract/${number}`, {
+                    method: 'post',
+                    body: formData
+                })
+                answer({ y: 100, x: 100 }, parseInt(number))
+            }
+        }
+
+        function startDraw() {
+        }
+
+        elCanvas.addEventListener('touchstart', e => {
+            console.log('touchstart')
+            clearTimeout(endDrawTimeout)
+            endDrawTimeout = null
+
+            drawing = true;
+            polygons.push([])
+            elCanvas.addEventListener('touchmove', draw)
+            e.preventDefault()
+        }, false);
+
+        elCanvas.addEventListener('touchend', async e => {
+            console.log('touchend')
+            elCanvas.removeEventListener('touchmove', draw)
+            endDrawTimeout = setTimeout(endDraw, 1000)
+            {{/*  e.preventDefault()  */}}
+        },false)
+
+        elCanvas.addEventListener('mouseup', async e => {
+            elCanvas.removeEventListener('mousemove', draw)
+            endDrawTimeout = setTimeout(endDraw, 1000)
+        });
+
+        elCanvas.addEventListener('mousedown', e => {
+            clearTimeout(endDrawTimeout)
+            endDrawTimeout = null
+
+            drawing = true;
+            polygons.push([])
+            elCanvas.addEventListener('mousemove', draw)
+        });
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+
+            // While there remain elements to shuffle.
+            while (currentIndex > 0) {
+
+                // Pick a remaining element.
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+
+                // And swap it with the current element.
+                [array[currentIndex], array[randomIndex]] = [
+                    array[randomIndex], array[currentIndex]];
+            }
+
+            return array;
+        }
+        const appEl = document.querySelector('#app')
+        const correctEl = document.querySelector('#correct')
+        const wrongEl = document.querySelector('#wrong')
+        let qualifiers = [['+', x => x * 1], ['-', x => x * -1]]
+        let questions = []
+        for (let qual of qualifiers) {
+            for (let i = 0; i <= 10; i++) {
+                for (let j = 0; j <= 10; j++) {
+                    let a = i, b = j;
+                    let c = a + qual[1](b)
+                    if (c > -1 && c <= 10)
+                        questions.push([`${a} ${qual[0]} ${b}`, { q: qual[0], a: a, b: b, c: c }])
+
+                    if (i == j)
+                        continue
+
+                    c = b + qual[1](a)
+                    if (c > -1 && c <= 10)
+                        questions.push([`${b} ${qual[0]} ${a}`, { q: qual[0], a: b, b: a, c: c }])
+
+                }
+            }
+        }
+
+        questions = shuffle(questions)
+        console.log(questions.map(x => x[0]))
+        currentQuestion = null;
+        let q = document.querySelector('#question')
+        let a = document.querySelector('#answers')
+        classLists.push(q.classList)
+
+        function nextQuestion() {
+            correctEl.innerText = correct.length
+            wrongEl.innerText = wrong.length
+
+            currentQuestion = questions.pop()
+            if (currentQuestion == null) {
+                q.innerText = 'Bra jobbat!!'
+                return;
+            }
+            let [text, conf] = currentQuestion
+            q.innerText = `${text} = ?`
+
+            if (conf.q === '+') {
+                classLists.forEach(x => {
+                    x.add('plus')
+                    x.remove('minus')
+                })
+            } else {
+                classLists.forEach(x => {
+                    x.add('minus')
+                    x.remove('plus')
+                })
+            }
+        }
+
+        const correct = []
+        const wrong = []
+        const thumbImg = document.createElement('img');
+        thumbImg.style.position = 'absolute';
+        thumbImg.style.left = window.innerWidth / 2 + 'px'
+        thumbImg.style.top = '20vh'
+        thumbImg.style.width = 0
+        thumbImg.style.height = 0
+        document.body.appendChild(thumbImg)
+
+        thumbImg.addEventListener('animationend', e => {
+            thumbImg.style.animation = ''
+            nextQuestion()
+        })
+
+        function animateCorrect(el, _question) {
+            thumbImg.src = 'thumb.webp';
+            thumbImg.style.left = (el.x + 25) + 'px';
+            thumbImg.style.top = (el.y - 35) + 'px';
+            thumbImg.style.animation = 'rl 1s 1 ease-out';
+        }
+
+        function animateWrong(el, _question) {
+            thumbImg.src = 'poop.gif';
+            thumbImg.style.left = el.x + 'px';
+            thumbImg.style.top = el.y + 'px';
+            thumbImg.style.animation = 'poop 1s 1 ease-out';
+        }
+
+        let started = null
+
+        function answer(e, number) {
+            if (started === null)
+                started = Date.now()
+
+            q.innerText = q.innerText.slice(0, -1) + currentQuestion[1].c
+
+            if (currentQuestion[1].c === number) {
+                correct.unshift(currentQuestion)
+                animateCorrect(e, currentQuestion)
+            } else {
+                wrong.unshift(currentQuestion)
+                animateWrong(e, currentQuestion)
+            }
+
+            let elapsed = Date.now() - started
+
+            if (elapsed > 1000 * 60 * 4) {
+                questions.splice(0, questions.length, wrong.pop())
+            }
+        }
+
+        function load() {
+            let qb = q.getBoundingClientRect()
+            //q.style.left = `${(window.innerWidth - qb.width) / 2}px`
+            // q.style.top = `${(window.innerHeight - qb.height) / 2}px`
+            qb = q.getBoundingClientRect()
+
+            let left = qb.left
+            let width = 68
+            let pad = (qb.width - width - 2) / 4
+
+            for (let i = 0; i <= 10; i++) {
+                let height = 68;
+                console.log(left)
+                let y = qb.top - (height + 12) + ((qb.height + height + 22) * (i / 5 | 0))
+                let numberEl = document.createElement('div');
+                { {/*  numberEl.style.position = 'absolute'  */ } }
+                numberEl.style.width = width + 'px'
+                numberEl.style.height = height + 'px'
+                { {/*  numberEl.style.left = left + 'px'  */ } }
+                { {/*  numberEl.style.top = y + 'px'  */ } }
+                numberEl.className = 'number'
+                classLists.push(numberEl.classList)
+                numberEl.addEventListener('click', e => answer(e, i))
+
+                numberEl.innerText = `${i}`;
+                console.log(i)
+                a.appendChild(numberEl)
+                left += (pad)
+                if (i == 4)
+                    left = qb.left
+            }
+
+            nextQuestion()
+        }
+        window.addEventListener('load', load)
+    </script>
+    <style>
+        #app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @font-face {
+            font-family: 'Short_Stack variant0';
+            src: url(https://fonts.gstatic.com/s/shortstack/v15/bMrzmS2X6p0jZC6EcmPFX9SVe34h0Wq7.woff2) format('woff2');
+        }
+
+        body {
+            font-family: "Short_Stack variant0", Tofu;
+        }
+
+        #question-wrapper {
+            margin-top: 30px;
+            border: 1px solid black;
+            text-align: center;
+            width: 80vw;
+            display: flex;
+            align-content: center;
+            flex-direction: column;
+        }
+
+        #question {
+            height: 100%;
+            font-size: 3rem;
+        }
+
+        .minus {
+            background-color: lightpink;
+        }
+
+        .plus {
+            background-color: lightyellow;
+        }
+
+        .number {
+            padding-top: 2px;
+            font-size: 3rem;
+            text-align: center;
+            border: 1px solid black;
+        }
+
+        #answers {
+            width: 80vw;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            justify-content: space-between;
+        }
+
+        @keyframes rl {
+            10% {
+                margin-top: -66px;
+                margin-left: -80px;
+                height: 160px;
+                width: 132px
+            }
+
+            50% {
+                margin-top: -66px;
+                margin-left: -80px;
+                height: 160px;
+                width: 132px
+            }
+
+            90% {
+                margin-top: -66px;
+                margin-left: -80px;
+                height: 160px;
+                width: 132px
+            }
+
+            100% {
+                height: 0;
+                width: 0
+            }
+        }
+
+        @keyframes poop {
+            10% {
+                margin-top: -80px;
+                margin-left: -80px;
+                height: 160px;
+                width: 160px
+            }
+
+            50% {
+                margin-top: -80px;
+                margin-left: -80px;
+                height: 160px;
+                width: 160px
+            }
+
+            90% {
+                margin-top: -80px;
+                margin-left: -80px;
+                height: 160px;
+                width: 160px
+            }
+
+            100% {
+                height: 0;
+                width: 0
+            }
+        }
+    </style>
+</body>
+
+</html>

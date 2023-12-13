@@ -1,6 +1,7 @@
 BUCKET_NAME=$1
 aws s3 sync --exclude '.git/*' --exclude deploy.sh . "s3://$BUCKET_NAME"
 aws s3api put-object-acl --bucket $BUCKET_NAME --key index.html --acl public-read
+aws s3api put-object-acl --bucket $BUCKET_NAME --key handskrift.html --acl public-read
 aws s3api put-object-acl --bucket $BUCKET_NAME --key thumb.webp --acl public-read
 aws s3api put-object-acl --bucket $BUCKET_NAME --key poop.gif --acl public-read
 
