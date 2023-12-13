@@ -7,7 +7,7 @@ app = Flask(__name__)
 def index():
     return open('handskrift.html')
 
-@app.route("/textract", methods=['POST'])
+@app.route("/textract/", methods=['POST'])
 def textract_query():
     request_data = request.files['query']
 
@@ -16,7 +16,7 @@ def textract_query():
 @app.route("/textract/<number>", methods=['POST'])
 def textract_persist(number):
     request_data = request.files['query']
-    request_data.save(f'classification/{number}/{int(time.time())}.png')
+    request_data.save(f'classification/{number}/{int(time.time())}.jpg')
     # with open(f'classification/{number}/{int(time.time())}.png', 'wb') as f:
     #     f.write(request_data)
 

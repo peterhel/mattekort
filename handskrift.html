@@ -15,19 +15,26 @@
         <div id="question-wrapper">
             <div id="question">? + ? = ?</div>
         </div>
-        <div id="answers">
-            <canvas width="224" height="224" style="border:1px solid black" id="answer"></canvas>
+        <div style="position:relative">
+            <div id="write">
+                <span>Skriv</span>
+                <div>
+                    <div id="guide">9</div>
+                    <canvas width="224" height="224" style="position:relative;z-index:10;border:1px solid black; margin:0 auto" id="answer"></canvas>
+                </div>
+            </div>
+            <div id="answers">
+
+            </div>
         </div>
     </div>
     <script>
         const classLists = []
         const elCanvas = document.getElementById('answer');
+        const elGuide = document.getElementById('guide');
         var ctx = elCanvas.getContext('2d');
 
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, elCanvas.width, elCanvas.height);
-
-        let polygons = [[]]
+        let polygons = []
         let drawing = false;
 
         let rightMost = 0
@@ -36,10 +43,10 @@
         let endDrawTimeout = null
 
         function draw(e) {
-            {{/*  e.preventDefault()  */}}
+            { {/*  e.preventDefault()  */ } }
 
             let clientX, clientY;
-            if(e.touches) {
+            if (e.touches) {
                 clientX = e.touches[0].clientX
                 clientY = e.touches[0].clientY
             } else {
@@ -74,11 +81,15 @@
             }
 
             ctx.clearRect(0, 0, elCanvas.width, elCanvas.height);
+            {{/*  ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, elCanvas.width, elCanvas.height);  */}}
 
             console.log(polygons.length)
 
             for (let pixels of polygons) {
                 const [prev, curr] = pixels.slice(-2)
+                if (!(prev || curr))
+                    return
                 ctx.moveTo(prev[0], prev[1]);
                 ctx.lineTo(curr[0], curr[1]);
 
@@ -87,9 +98,24 @@
         }
 
         async function endDraw() {
-            polygons.splice(0, polygons.length)
 
-            console.log(rightMost, downMost)
+            ctx.clearRect(0, 0, elCanvas.width, elCanvas.height);
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, elCanvas.width, elCanvas.height);
+
+            console.log(polygons.length)
+
+            for (let pixels of polygons) {
+                const [prev, curr] = pixels.slice(-2)
+                if (!(prev || curr))
+                    return
+                ctx.moveTo(prev[0], prev[1]);
+                ctx.lineTo(curr[0], curr[1]);
+
+                ctx.stroke()
+            }
+
+            polygons.splice(0, polygons.length)
 
             const newCanvas = document.createElement('canvas');
             newCanvas.width = 600
@@ -113,7 +139,7 @@
 
             { {/*  const url = newCanvas.toDataURL('image/jpeg', .5)  */ } }
             const url = elCanvas.toDataURL('image/png', .5)
-            const bytes = await new Promise(x => elCanvas.toBlob(x))
+            const bytes = await new Promise(x => elCanvas.toBlob(x, 'image/jpeg'))
             { {/*  location.href = url  */ } }
 
             rightMost = 0
@@ -123,23 +149,25 @@
             formData.append('query', bytes)
 
             { {/*  await fetch('https://kvcc62euei75227hmvzq3aisvq0esvth.lambda-url.eu-central-1.on.aws/', {   */ } }
-            let response = await fetch('/textract', {
+            {{/*  let response = await fetch('/textract', {
                 method: 'post',
                 body: formData
-            })
+            })  */}}
 
             ctx.clearRect(0, 0, elCanvas.width, elCanvas.height);
             ctx.beginPath();//ADD THIS LINE!<<<<<<<<<<<<<
 
-            let data = await response.json()
-            if (!data.success) {
-                const number = prompt('Vilken siffra är det?')
-                let response = await fetch(`/textract/${number}`, {
+            {{/*  let data = await response.json()  */}}
+            {{/*  if (!data.success) {  */}}
+                {{/*  const number = prompt('Vilken siffra är det?')  */}}
+                let response = await fetch(`/textract/${currentQuestion[1].c}`, {
                     method: 'post',
                     body: formData
                 })
-                answer({ y: 100, x: 100 }, parseInt(number))
-            }
+                {{/*  answer({ y: 100, x: 100 }, parseInt(number))  */}}
+            {{/*  }  */}}
+            writeEl.style.visibility = 'hidden'
+            nextQuestion()
         }
 
         function startDraw() {
@@ -160,8 +188,8 @@
             console.log('touchend')
             elCanvas.removeEventListener('touchmove', draw)
             endDrawTimeout = setTimeout(endDraw, 1000)
-            {{/*  e.preventDefault()  */}}
-        },false)
+            { {/*  e.preventDefault()  */ } }
+        }, false)
 
         elCanvas.addEventListener('mouseup', async e => {
             elCanvas.removeEventListener('mousemove', draw)
@@ -194,6 +222,7 @@
             return array;
         }
         const appEl = document.querySelector('#app')
+        const writeEl = document.querySelector('#write')
         const correctEl = document.querySelector('#correct')
         const wrongEl = document.querySelector('#wrong')
         let qualifiers = [['+', x => x * 1], ['-', x => x * -1]]
@@ -260,15 +289,21 @@
         document.body.appendChild(thumbImg)
 
         thumbImg.addEventListener('animationend', e => {
+            console.log(e)
+
+            if (e.animationName === 'correct') {
+                write.style.visibility = 'visible'
+            }
+
             thumbImg.style.animation = ''
-            nextQuestion()
+            {{/*  nextQuestion()  */}}
         })
 
         function animateCorrect(el, _question) {
             thumbImg.src = 'thumb.webp';
             thumbImg.style.left = (el.x + 25) + 'px';
             thumbImg.style.top = (el.y - 35) + 'px';
-            thumbImg.style.animation = 'rl 1s 1 ease-out';
+            thumbImg.style.animation = 'correct 1s 1 ease-out';
         }
 
         function animateWrong(el, _question) {
@@ -287,6 +322,7 @@
             q.innerText = q.innerText.slice(0, -1) + currentQuestion[1].c
 
             if (currentQuestion[1].c === number) {
+                elGuide.innerText = number;
                 correct.unshift(currentQuestion)
                 animateCorrect(e, currentQuestion)
             } else {
@@ -353,6 +389,29 @@
             font-family: "Short_Stack variant0", Tofu;
         }
 
+        #guide {
+            position: absolute;
+            font-size: 11rem;
+            color: #ddd;
+            text-align: center;
+            width: 100%;
+            left: 0;
+        }
+
+        #write {
+            position: absolute;
+            width: 100%;
+            display: flex;
+            padding-top: 20px;
+            visibility: hidden;
+            background-color: white;
+            padding-bottom: 20px;
+            border: 2px solid;
+            flex-direction: column;
+            align-items: center;
+            font-size: 3rem;
+        }
+
         #question-wrapper {
             margin-top: 30px;
             border: 1px solid black;
@@ -384,7 +443,7 @@
         }
 
         #answers {
-            width: 80vw;
+            max-width: 300px;
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
@@ -392,7 +451,7 @@
             justify-content: space-between;
         }
 
-        @keyframes rl {
+        @keyframes correct {
             10% {
                 margin-top: -66px;
                 margin-left: -80px;
