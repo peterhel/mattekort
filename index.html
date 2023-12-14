@@ -5,11 +5,14 @@
 </head>
 
 <body>
-    <div id="header" style="display:flex; height:100px">
+    <div id="header">
+        <div style="background-color:lightyellow;padding:6px;text-align:center"><a onclick="gotov2()" href="#">Testa en nyare version här!</a></div>
+        <div style="display:flex; height:100px">
         <div id="correct" style="background-color:lightgreen; width:100%; color:white;text-align:center;font-size:5em">0
         </div>
         <div id="wrong" style="background-color:lightcoral; width:100%; color:white;text-align:center;font-size:5em">0
         </div>
+    </div>
     </div>
     <div id="app">
         <div id="question-wrapper">
@@ -37,6 +40,12 @@
 
             return array;
         }
+
+        function gotov2(e) {
+            localStorage.setItem('version', '2')
+            location.href = '/handskrift.html'
+        }
+
         const appEl = document.querySelector('#app')
         const correctEl = document.querySelector('#correct')
         const wrongEl = document.querySelector('#wrong')
@@ -147,6 +156,16 @@
         }
 
         function load() {
+            try {
+                const version = localStorage.getItem('version')
+
+                if(version === '2') {
+                    location.href = '/handskrift.html'
+                }
+            } catch(_) {
+             // ignore
+            }
+
             let qb = q.getBoundingClientRect()
             //q.style.left = `${(window.innerWidth - qb.width) / 2}px`
             // q.style.top = `${(window.innerHeight - qb.height) / 2}px`
