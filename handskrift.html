@@ -2,6 +2,7 @@
 
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
 </head>
 
 <body>
@@ -20,7 +21,8 @@
                 <span>Skriv</span>
                 <div>
                     <div id="guide">9</div>
-                    <canvas width="224" height="224" style="position:relative;z-index:10;border:1px solid black; margin:0 auto" id="answer"></canvas>
+                    <canvas width="224" height="224"
+                        style="position:relative;z-index:10;border:1px solid black; margin:0 auto" id="answer"></canvas>
                 </div>
             </div>
             <div id="answers">
@@ -81,8 +83,10 @@
             }
 
             ctx.clearRect(0, 0, elCanvas.width, elCanvas.height);
-            {{/*  ctx.fillStyle = "white";
-            ctx.fillRect(0, 0, elCanvas.width, elCanvas.height);  */}}
+            {
+                {/*  ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, elCanvas.width, elCanvas.height);  */}
+            }
 
             console.log(polygons.length)
 
@@ -138,34 +142,36 @@
             newCtx.fillText("8", rightMost, downMost);
 
             const url = elCanvas.toDataURL('image/jpeg', 1)
-            {{/*  const url = elCanvas.toDataURL('image/png', .5)  */}}
-            {{/*  const bytes = await new Promise(x => elCanvas.toBlob(x, 'image/jpeg'))  */}}
+            { {/*  const url = elCanvas.toDataURL('image/png', .5)  */ } }
+            { {/*  const bytes = await new Promise(x => elCanvas.toBlob(x, 'image/jpeg'))  */ } }
             { {/*  location.href = url  */ } }
 
             rightMost = 0
             downMost = 0
 
-            {{/*  const formData = new FormData()  */}}
-            {{/*  formData.append('query', bytes)  */}}
+            { {/*  const formData = new FormData()  */ } }
+            { {/*  formData.append('query', bytes)  */ } }
 
             { {/*  await fetch('https://kvcc62euei75227hmvzq3aisvq0esvth.lambda-url.eu-central-1.on.aws/', {   */ } }
-            {{/*  let response = await fetch('/textract', {
+            {
+                {/*  let response = await fetch('/textract', {
                 method: 'post',
                 body: formData
-            })  */}}
+            })  */}
+            }
 
             ctx.clearRect(0, 0, elCanvas.width, elCanvas.height);
             ctx.beginPath();//ADD THIS LINE!<<<<<<<<<<<<<
 
-            {{/*  let data = await response.json()  */}}
-            {{/*  if (!data.success) {  */}}
-                {{/*  const number = prompt('Vilken siffra är det?')  */}}
-                let response = await fetch(`/textract/${currentQuestion[1].c}`, {
-                    method: 'post',
-                    body: url
-                })
-                {{/*  answer({ y: 100, x: 100 }, parseInt(number))  */}}
-            {{/*  }  */}}
+            { {/*  let data = await response.json()  */ } }
+            { {/*  if (!data.success) {  */ } }
+            { {/*  const number = prompt('Vilken siffra är det?')  */ } }
+            let response = await fetch(`/textract/${currentQuestion[1].c}`, {
+                method: 'post',
+                body: url
+            })
+            { {/*  answer({ y: 100, x: 100 }, parseInt(number))  */ } }
+            { {/*  }  */ } }
             writeEl.style.visibility = 'hidden'
             nextQuestion()
         }
@@ -280,34 +286,42 @@
 
         const correct = []
         const wrong = []
-        const thumbImg = document.createElement('img');
-        thumbImg.style.position = 'absolute';
-        thumbImg.style.left = window.innerWidth / 2 + 'px'
-        thumbImg.style.top = '20vh'
-        thumbImg.style.width = 0
-        thumbImg.style.height = 0
-        document.body.appendChild(thumbImg)
 
-        thumbImg.addEventListener('animationend', e => {
+        function handleAnimationEnd(e) {
             console.log(e)
 
             if (e.animationName === 'correct') {
                 write.style.visibility = 'visible'
+            } else {
+                nextQuestion()
             }
 
-            thumbImg.style.animation = ''
-            {{/*  nextQuestion()  */}}
-        })
+            e.target.style.animation = ''
+        }
+
+        for (let imageSrc of ['thumb.webp', 'poop.gif']) {
+            const thumbImg = document.createElement('img');
+            thumbImg.style.position = 'absolute';
+            thumbImg.style.left = window.innerWidth / 2 + 'px'
+            thumbImg.style.top = '20vh'
+            thumbImg.style.width = 0
+            thumbImg.style.height = 0
+            thumbImg.src = imageSrc;
+            thumbImg.id = imageSrc;
+            document.body.appendChild(thumbImg)
+
+            thumbImg.addEventListener('animationend', handleAnimationEnd)
+        }
 
         function animateCorrect(el, _question) {
-            thumbImg.src = 'thumb.webp';
+            const thumbImg = document.getElementById('thumb.webp')
             thumbImg.style.left = (el.x + 25) + 'px';
             thumbImg.style.top = (el.y - 35) + 'px';
             thumbImg.style.animation = 'correct 1s 1 ease-out';
         }
 
         function animateWrong(el, _question) {
-            thumbImg.src = 'poop.gif';
+            const thumbImg = document.getElementById('poop.gif')
             thumbImg.style.left = el.x + 'px';
             thumbImg.style.top = el.y + 'px';
             thumbImg.style.animation = 'poop 1s 1 ease-out';

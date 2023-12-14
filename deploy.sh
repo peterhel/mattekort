@@ -10,3 +10,9 @@ aws s3 website "s3://$BUCKET_NAME" --index-document index.html
 echo "http://$BUCKET_NAME.s3-website.eu-north-1.amazonaws.com/"
 
 aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/index.html" "/handskrift.html"
+
+pushd mattekort-textract
+rm function.zip || true
+zip function.zip lambda_function.py
+AWS_DEFAULT_REGION=us-east-1 aws lambda update-function-code --function-name mattekort-textract --zip-file fileb://function.zip
+popd
