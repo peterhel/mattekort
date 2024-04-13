@@ -7,7 +7,7 @@
 
 <body>
     <div id="header">
-        <div style="background-color:lightyellow;padding:6px;text-align:center"><a onclick="gotov2()" href="#">Testa en nyare version här!</a></div>
+        <div style="background-color:lightyellow;padding:6px;text-align:center"><a onclick="gotov2()" href="#">Klicka här för att öva på att skriva siffrorna</a></div>
         <div style="display:flex; height:100px">
         <div id="correct" style="background-color:lightgreen; width:100%; color:white;text-align:center;font-size:5em">0
         </div>
@@ -55,17 +55,22 @@
         for (let qual of qualifiers) {
             for (let i = 0; i <= 10; i++) {
                 for (let j = 0; j <= 10; j++) {
-                    let a = i, b = j;
-                    let c = a + qual[1](b)
-                    if (c > -1 && c <= 10)
-                        questions.push([`${a} ${qual[0]} ${b}`, { q: qual[0], a: a, b: b, c: c }])
-
                     if (i == j)
                         continue
 
+                    let a = i, b = j;
+                    let c = a + qual[1](b)
+
+                    if (c > -1 && c <= 10)
+                        questions.push([`${a} ${qual[0]} ${b}`, { q: qual[0], a: a, b: b, c: c }, 'lilla'])
+                    else if (c > 1 && c <= 18)
+                        questions.push([`${a} ${qual[0]} ${b}`, { q: qual[0], a: a, b: b, c: c }, 'stora'])
+
                     c = b + qual[1](a)
                     if (c > -1 && c <= 10)
-                        questions.push([`${b} ${qual[0]} ${a}`, { q: qual[0], a: b, b: a, c: c }])
+                        questions.push([`${b} ${qual[0]} ${a}`, { q: qual[0], a: b, b: a, c: c }, 'lilla'])
+                    else if (c > 1 && c <= 18)
+                        questions.push([`${b} ${qual[0]} ${a}`, { q: qual[0], a: b, b: a, c: c }, 'stora'])
 
                 }
             }
@@ -83,22 +88,29 @@
             wrongEl.innerText = wrong.length
 
             currentQuestion = questions.pop()
+            console.log(currentQuestion)
             if (currentQuestion == null)
                 {
                     q.innerText = 'Bra jobbat!!'
                     return;
                 }
-            let [text, conf] = currentQuestion
+            let [text, conf, type] = currentQuestion
             q.innerText = `${text} = ?`
 
             if (conf.q === '+') {
                 classLists.forEach(x => {
                     x.add('plus')
+                    x.remove('lilla')
+                    x.remove('stora')
+                    x.add(type)
                     x.remove('minus')
                 })
             } else {
                 classLists.forEach(x => {
                     x.add('minus')
+                    x.remove('lilla')
+                    x.remove('stora')
+                    x.add(type)
                     x.remove('plus')
                 })
             }
@@ -160,9 +172,9 @@
             try {
                 const version = localStorage.getItem('version')
 
-                if(version === '2') {
-                    location.href = '/handskrift.html'
-                }
+                //if(version === '2') {
+                //    location.href = '/handskrift.html'
+                //}
             } catch(_) {
              // ignore
             }
@@ -176,7 +188,7 @@
             let width = 68
             let pad = (qb.width - width - 2) / 4
 
-            for (let i = 0; i <= 10; i++) {
+            for (let i = 0; i <= 18; i++) {
                 let height = 68;
                 console.log(left)
                 let y = qb.top - (height + 12) + ((qb.height + height + 22) * (i / 5 | 0))
@@ -233,13 +245,22 @@
             font-size: 3rem;
         }
 
-        .minus {
+        .minus.lilla {
             background-color: lightpink;
         }
 
-        .plus {
+        .plus.lilla {
             background-color: lightyellow;
         }
+
+        .minus.stora {
+            background-color: turquoise;
+        }
+
+        .plus.stora {
+            background-color: orange;
+        }
+
 
         .number {
             padding-top: 2px;
