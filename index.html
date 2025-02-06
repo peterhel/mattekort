@@ -7,7 +7,10 @@
 
 <body>
     <div id="header">
-        <div style="background-color:lightyellow;padding:6px;text-align:center"><a onclick="gotov2()" href="#">Klicka här för att öva på att skriva siffrorna</a></div>
+        <div style="background-color:lightyellow;padding:6px;text-align:center">
+            <h1>Lilla</h1>
+            <a href="stora.html">Byt till stora</a>
+        </div>
         <div style="display:flex; height:100px">
         <div id="correct" style="background-color:lightgreen; width:100%; color:white;text-align:center;font-size:5em">0
         </div>
@@ -63,15 +66,11 @@
 
                     if (c > -1 && c <= 10)
                         questions.push([`${a} ${qual[0]} ${b}`, { q: qual[0], a: a, b: b, c: c }, 'lilla'])
-                    else if (c > 1 && c <= 18)
-                        questions.push([`${a} ${qual[0]} ${b}`, { q: qual[0], a: a, b: b, c: c }, 'stora'])
+                    
 
                     c = b + qual[1](a)
                     if (c > -1 && c <= 10)
                         questions.push([`${b} ${qual[0]} ${a}`, { q: qual[0], a: b, b: a, c: c }, 'lilla'])
-                    else if (c > 1 && c <= 18)
-                        questions.push([`${b} ${qual[0]} ${a}`, { q: qual[0], a: b, b: a, c: c }, 'stora'])
-
                 }
             }
         }
