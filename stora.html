@@ -1,0 +1,342 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+</head>
+
+<body>
+    <div id="header">
+        <div style="background-color:lightyellow;padding:6px;text-align:center">
+            <h1>Stora</h1>
+            <a href="index.html">Byt till lilla</a>
+        </div>
+        <div style="display:flex; height:100px">
+        <div id="correct" style="background-color:lightgreen; width:100%; color:white;text-align:center;font-size:5em">0
+        </div>
+        <div id="wrong" style="background-color:lightcoral; width:100%; color:white;text-align:center;font-size:5em">0
+        </div>
+    </div>
+    </div>
+    <div id="app">
+        <div id="question-wrapper">
+            <div id="question">? + ? = ?</div>
+        </div>
+        <div id="answers"></div>
+    </div>
+    <script>
+        const classLists = []
+
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+
+            // While there remain elements to shuffle.
+            while (currentIndex > 0) {
+
+                // Pick a remaining element.
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+
+                // And swap it with the current element.
+                [array[currentIndex], array[randomIndex]] = [
+                    array[randomIndex], array[currentIndex]];
+            }
+
+            return array;
+        }
+
+        function gotov2(e) {
+            localStorage.setItem('version', '2')
+            location.href = '/handskrift.html'
+        }
+
+        const appEl = document.querySelector('#app')
+        const correctEl = document.querySelector('#correct')
+        const wrongEl = document.querySelector('#wrong')
+        let qualifiers = [['+', x => x * 1], ['-', x => x * -1]]
+        let questions = []
+        for (let qual of qualifiers) {
+            for (let i = 0; i <= 20; i++) {
+                for (let j = 0; j <= 20; j++) {
+
+                    if(i < 10 && j < 10) {
+                        continue
+                    }
+
+                    if (i == j)
+                        continue
+
+                    let a = i, b = j;
+                    let c = a + qual[1](b)
+
+                    if (c > -1 && c <= 20)
+                        questions.push([`${a} ${qual[0]} ${b}`, { q: qual[0], a: a, b: b, c: c }, 'stora'])
+
+                    c = b + qual[1](a)
+                    if (c > -1 && c <= 20)
+                        questions.push([`${b} ${qual[0]} ${a}`, { q: qual[0], a: b, b: a, c: c }, 'stora'])
+
+                }
+            }
+        }
+
+        questions = shuffle(questions)
+        console.log(questions.map(x => x[0]))
+        currentQuestion = null;
+        let q = document.querySelector('#question')
+        let a = document.querySelector('#answers')
+        classLists.push(q.classList)
+
+        function nextQuestion() {
+            correctEl.innerText = correct.length
+            wrongEl.innerText = wrong.length
+
+            currentQuestion = questions.pop()
+            console.log(currentQuestion)
+            if (currentQuestion == null)
+                {
+                    q.innerText = 'Bra jobbat!!'
+                    return;
+                }
+            let [text, conf, type] = currentQuestion
+            q.innerText = `${text} = ?`
+
+            if (conf.q === '+') {
+                classLists.forEach(x => {
+                    x.add('plus')
+                    x.remove('lilla')
+                    x.remove('stora')
+                    x.add(type)
+                    x.remove('minus')
+                })
+            } else {
+                classLists.forEach(x => {
+                    x.add('minus')
+                    x.remove('lilla')
+                    x.remove('stora')
+                    x.add(type)
+                    x.remove('plus')
+                })
+            }
+        }
+
+        const correct = []
+        const wrong = []
+        const thumbImg = document.createElement('img');
+        thumbImg.style.position = 'absolute';
+        thumbImg.style.left = window.innerWidth / 2 + 'px'
+        thumbImg.style.top = '20vh'
+        thumbImg.style.width = 0
+        thumbImg.style.height = 0
+        document.body.appendChild(thumbImg)
+
+        thumbImg.addEventListener('animationend', e => {
+            thumbImg.style.animation = ''
+            nextQuestion()
+        })
+
+        function animateCorrect(el, _question) {
+            thumbImg.src = 'thumb.webp';
+            thumbImg.style.left = (el.x + 25) + 'px';
+            thumbImg.style.top = (el.y - 35) + 'px';
+            thumbImg.style.animation = 'rl 1s 1 ease-out';
+        }
+
+        function animateWrong(el, _question) {
+            thumbImg.src = 'poop.gif';
+            thumbImg.style.left = el.x + 'px';
+            thumbImg.style.top = el.y + 'px';
+            thumbImg.style.animation = 'poop 1s 1 ease-out';
+        }
+
+        let started = null
+
+        function answer(e, number) {
+            if(started === null) 
+                started = Date.now()
+
+            q.innerText = q.innerText.slice(0, -1) + currentQuestion[1].c
+
+            if (currentQuestion[1].c === number) {
+                correct.unshift(currentQuestion)
+                animateCorrect(e, currentQuestion)
+            } else {
+                wrong.unshift(currentQuestion)
+                animateWrong(e, currentQuestion)
+            }
+
+            let elapsed = Date.now() - started
+
+            if(elapsed > 1000 * 60 * 4) {
+                questions.splice(0, questions.length, wrong.pop())
+            }
+        }
+
+        function load() {
+            try {
+                const version = localStorage.getItem('version')
+
+                //if(version === '2') {
+                //    location.href = '/handskrift.html'
+                //}
+            } catch(_) {
+             // ignore
+            }
+
+            let qb = q.getBoundingClientRect()
+            //q.style.left = `${(window.innerWidth - qb.width) / 2}px`
+            // q.style.top = `${(window.innerHeight - qb.height) / 2}px`
+            qb = q.getBoundingClientRect()
+
+            let left = qb.left
+            let width = 68
+            let pad = (qb.width - width - 2) / 4
+
+            for (let i = 0; i <= 20; i++) {
+                let height = 68;
+                console.log(left)
+                let y = qb.top - (height + 12) + ((qb.height + height + 22) * (i / 5 | 0))
+                let numberEl = document.createElement('div');
+                { {/*  numberEl.style.position = 'absolute'  */ } }
+                numberEl.style.width = width + 'px'
+                numberEl.style.height = height + 'px'
+                { {/*  numberEl.style.left = left + 'px'  */ } }
+                { {/*  numberEl.style.top = y + 'px'  */ } }
+                numberEl.className = 'number'
+                classLists.push(numberEl.classList)
+                numberEl.addEventListener('click', e => answer(e, i))
+
+                numberEl.innerText = `${i}`;
+                console.log(i)
+                a.appendChild(numberEl)
+                left += (pad)
+                if (i == 4)
+                    left = qb.left
+            }
+
+            nextQuestion()
+        }
+        window.addEventListener('load', load)
+    </script>
+    <style>
+        #app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @font-face {
+            font-family: 'Short_Stack variant0';
+            src: url(https://fonts.gstatic.com/s/shortstack/v15/bMrzmS2X6p0jZC6EcmPFX9SVe34h0Wq7.woff2) format('woff2');
+        }
+
+        body {
+            font-family: "Short_Stack variant0", Tofu;
+        }
+
+        #question-wrapper {
+            margin-top: 30px;
+            border: 1px solid black;
+            text-align: center;
+            width: 80vw;
+            display: flex;
+            align-content: center;
+            flex-direction: column;
+        }
+
+        #question {
+            height: 100%;
+            font-size: 3rem;
+        }
+
+        .minus.lilla {
+            background-color: lightpink;
+        }
+
+        .plus.lilla {
+            background-color: lightyellow;
+        }
+
+        .minus.stora {
+            background-color: turquoise;
+        }
+
+        .plus.stora {
+            background-color: orange;
+        }
+
+
+        .number {
+            padding-top: 2px;
+            font-size: 3rem;
+            text-align: center;
+            border: 1px solid black;
+        }
+
+        #answers {
+            width: 80vw;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            justify-content: space-between;
+        }
+
+        @keyframes rl {
+            10% {
+                margin-top: -66px;
+                margin-left: -80px;
+                height: 160px;
+                width: 132px
+            }
+
+            50% {
+                margin-top: -66px;
+                margin-left: -80px;
+                height: 160px;
+                width: 132px
+            }
+
+            90% {
+                margin-top: -66px;
+                margin-left: -80px;
+                height: 160px;
+                width: 132px
+            }
+
+            100% {
+                height: 0;
+                width: 0
+            }
+        }
+        @keyframes poop {
+            10% {
+                margin-top: -80px;
+                margin-left: -80px;
+                height: 160px;
+                width: 160px
+            }
+
+            50% {
+                margin-top: -80px;
+                margin-left: -80px;
+                height: 160px;
+                width: 160px
+            }
+
+            90% {
+                margin-top: -80px;
+                margin-left: -80px;
+                height: 160px;
+                width: 160px
+            }
+
+            100% {
+                height: 0;
+                width: 0
+            }
+        }
+    </style>
+</body>
+
+</html>
