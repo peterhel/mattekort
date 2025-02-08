@@ -6,24 +6,14 @@
 </head>
 
 <body style="margin:0">
-        <div id="stats">
-            <div style="width:100vw;display:flex;display:none">
+        <div id="stats" style="display:none">
+            <div style="width:100vw;display:flex">
                 <div style="flex-grow: 1"></div>
                 <a href="javascript:stats.hide()">Stäng</a>
             </div>
             <div>
                 <table>
-                    <tbody>
-                        <tr>
-                            <td><strong>Rätt</strong></td><td></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Fel</strong></td><td></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Rätt</strong></td><td></td>
-                        </tr>
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>
@@ -49,7 +39,7 @@
         class Stats {
                 constructor() {
                     this.element = document.getElementById('stats')
-                    this.tableElement = this.element.querySelector('table')
+                    this.tableElement = this.element.querySelector('tbody')
                     this.data = {
                         right: 0,
                         wrong: 0,
@@ -98,6 +88,9 @@
                 }
 
             refreshUI() {
+                const elapsed = document.createElement('span')
+                elapsed.innerText = `Wow! Du klarade ${this.data.questions.length} tal på ${this.data.elapsed.minutes > 0 ? this.data.elapsed.minutes + ' minuter och ': '' } ${this.data.elapsed.seconds} sekunder!`
+                this.element.appendChild(elapsed)
                 for(let q of this.data.questions) {
                     console.log(q)
                     const tr = document.createElement('tr')
@@ -111,6 +104,12 @@
                     tr.appendChild(td)
                     this.tableElement.appendChild(tr)
                 }
+            }
+
+            setElapsed(elapsed) {
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                this.data.elapsed = {minutes, seconds}
             }
         }
 
@@ -187,6 +186,7 @@
             if (currentQuestion == null)
                 {
                     q.innerText = 'Bra jobbat!!';
+                    window.stats.setElapsed(Date.now() - started)
                     window.stats.show();
                     return;
                 }
@@ -260,8 +260,10 @@
             }
 
             let elapsed = Date.now() - started
+//            const runTime = 1000 * 60 * 2; // 2 minuter
+            const runTime = 1000 * 15; // 15 sekunder
 
-            if(elapsed > 1000 * 60 * 2) {
+            if(elapsed > runTime) {
                 questions.splice(0, questions.length, wrong.pop())
             }
         }
@@ -439,11 +441,18 @@
             background-color: rgba(255,255,255,.6);
         }
 
+.result-0{
+    background-color:rgba(255,0,0,.2) ;
+ }
+        .result-1{
+            background-color:rgba(0,255,0,.2) ;
+        }
         .result-0:after{
             content: 'F';
         }
         .result-1:after{
             content: 'R';
+
         }
         .result-2:after{
             content: 'R';
