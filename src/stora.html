@@ -19,12 +19,12 @@
             </div>
         </div>
         <div id="header">
-        <div style="background-color:lightyellow;padding:6px;text-align:center">
-            <h1>Stora</h1>
-            <a href="index.html">Byt till lilla</a>
-        </div>
-        <div style="display:flex; height:100px">
-        <div id="correct" style="background-color:lightgreen; width:100%; color:white;text-align:center;font-size:5em">0
+            <div style="padding:6px;text-align:center; position:absolute;z-index:1000;width:100%">
+                <h1 style="margin-bottom: 4px;color:lightgoldenrodyellow">Stora</h1>
+                <a href="index.html">Byt till lilla</a>
+            </div>
+        <div style="display:flex; height:100px; position:relative">
+            <div id="correct" style="background-color:lightgreen; width:100%; color:white;text-align:center;font-size:5em">0
         </div>
         <div id="wrong" style="background-color:lightcoral; width:100%; color:white;text-align:center;font-size:5em">0
         </div>
@@ -377,8 +377,8 @@
             width: 80vw;
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
-            padding: 20px;
+            gap: 5px;
+            padding: 10px;
             justify-content: space-between;
         }
 
