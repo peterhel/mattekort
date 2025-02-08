@@ -7,14 +7,15 @@
 
 <body style="margin:0">
         <div id="stats" style="display:none">
-            <div style="width:100vw;display:flex">
-                <div style="flex-grow: 1"></div>
-                <a href="javascript:stats.hide()">Stäng</a>
-            </div>
+            <div id="stats-content">
             <div>
                 <table>
                     <tbody></tbody>
                 </table>
+            </div>
+            <div style="border: 2px solid black; padding: 8px; text-align: center; background-color:cornflowerblue">
+                <a style="color:white" href="javascript:location.reload()">EN GÅNG TILL!!!</a>
+            </div>
             </div>
         </div>
         <div id="header">
@@ -39,6 +40,7 @@
         class Stats {
                 constructor() {
                     this.element = document.getElementById('stats')
+                    this.content = document.getElementById('stats-content')
                     this.tableElement = this.element.querySelector('tbody')
                     this.data = {
                         right: 0,
@@ -78,7 +80,8 @@
                 }
 
                 wrong(question) {
-                    if(this.allAnswered()) {
+                const alreadyAnswered = this.data.questions.find(x => x[0] === question[0])
+                    if(alreadyAnswered) {
 
                     } else {
                         this.data.wrong++
@@ -89,8 +92,9 @@
 
             refreshUI() {
                 const elapsed = document.createElement('span')
+                elapsed.classList.add('wow')
                 elapsed.innerText = `Wow! Du klarade ${this.data.questions.length} tal på ${this.data.elapsed.minutes > 0 ? this.data.elapsed.minutes + ' minuter och ': '' } ${this.data.elapsed.seconds} sekunder!`
-                this.element.appendChild(elapsed)
+                this.content.prepend(elapsed)
                 for(let q of this.data.questions) {
                     console.log(q)
                     const tr = document.createElement('tr')
@@ -433,12 +437,26 @@
             }
 
         }
+
+        .wow {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
         #stats {
             position: absolute;
             z-index: 500;
             width: 100vw;
             height: 100vh;
-            background-color: rgba(255,255,255,.6);
+            background-color: rgba(0,0,0, .3);
+
+        }
+
+        #stats-content{
+            background-color: rgba(255,255,255);
+            margin: 10pt;
+            padding: 10pt;
+            border: 2px solid black;
         }
 
 .result-0{
