@@ -150,8 +150,8 @@
         let qualifiers = [['+', x => x * 1], ['-', x => x * -1]]
         let questions = []
         for (let qual of qualifiers) {
-            for (let i = 0; i <= 20; i++) {
-                for (let j = 0; j <= 20; j++) {
+            for (let i = 1; i < 20; i++) {
+                for (let j = 1; j < 20; j++) {
 
                     if(i < 10 && j < 10) {
                         continue
@@ -163,11 +163,11 @@
                     let a = i, b = j;
                     let c = a + qual[1](b)
 
-                    if (c > -1 && c <= 20)
+                    if (c > 0 && c < 20)
                         questions.push([`${a} ${qual[0]} ${b}`, { q: qual[0], a: a, b: b, c: c }, 'stora'])
 
                     c = b + qual[1](a)
-                    if (c > -1 && c <= 20)
+                    if (c > 0 && c < 20)
                         questions.push([`${b} ${qual[0]} ${a}`, { q: qual[0], a: b, b: a, c: c }, 'stora'])
 
                 }
@@ -292,7 +292,7 @@
             let width = 68
             let pad = (qb.width - width - 2) / 4
 
-            for (let i = 0; i <= 20; i++) {
+            for (let i = 1; i <= 19; i++) {
                 let height = 68;
                 console.log(left)
                 let y = qb.top - (height + 12) + ((qb.height + height + 22) * (i / 5 | 0))
