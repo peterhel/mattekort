@@ -235,14 +235,14 @@
             thumbImg.src = 'thumb.webp';
             thumbImg.style.left = (el.x + 25) + 'px';
             thumbImg.style.top = (el.y - 35) + 'px';
-            thumbImg.style.animation = 'rl 1s 1 ease-out';
+            thumbImg.style.animation = 'rl .2s 1';
         }
 
         function animateWrong(el, _question) {
-            thumbImg.src = 'poop.gif';
+            thumbImg.src = 'poop.webp';
             thumbImg.style.left = el.x + 'px';
             thumbImg.style.top = el.y + 'px';
-            thumbImg.style.animation = 'poop 1s 1 ease-out';
+            thumbImg.style.animation = 'poop .2s 1';
         }
 
         let started = null
