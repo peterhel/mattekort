@@ -1,0 +1,49 @@
+{
+    "version": "2.0",
+    "routeKey": "$default",
+    "rawPath": "/",
+    "rawQueryString": "",
+    "headers": {
+        "sec-fetch-mode": "cors",
+        "referer": "http://localhost:9999/",
+        "content-length": "65",
+        "x-amzn-tls-version": "TLSv1.3",
+        "sec-fetch-site": "cross-site",
+        "x-forwarded-proto": "https",
+        "accept-language": "en-GB,en;q=0.8",
+        "origin": "http://localhost:9999",
+        "x-forwarded-port": "443",
+        "x-forwarded-for": "2606:1a40:1024:0:495a:6977:ac88:d420",
+        "pragma": "no-cache",
+        "accept": "*/*",
+        "x-amzn-tls-cipher-suite": "TLS_AES_128_GCM_SHA256",
+        "sec-gpc": "1",
+        "x-amzn-trace-id": "Root=1-67c35fc1-4b2796a60c12b064460fb610",
+        "host": "xhrd6j4gv5msjyyq5k2pky62pm0pmagx.lambda-url.eu-north-1.on.aws",
+        "content-type": "application/json",
+        "cache-control": "no-cache",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
+        "sec-fetch-dest": "empty"
+    },
+    "requestContext": {
+        "accountId": "anonymous",
+        "apiId": "xhrd6j4gv5msjyyq5k2pky62pm0pmagx",
+        "domainName": "xhrd6j4gv5msjyyq5k2pky62pm0pmagx.lambda-url.eu-north-1.on.aws",
+        "domainPrefix": "xhrd6j4gv5msjyyq5k2pky62pm0pmagx",
+        "http": {
+            "method": "POST",
+            "path": "/",
+            "protocol": "HTTP/1.1",
+            "sourceIp": "2606:1a40:1024:0:495a:6977:ac88:d420",
+            "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
+        },
+        "requestId": "9633c4dc-97ba-4eea-ab3c-7154db29a55f",
+        "routeKey": "$default",
+        "stage": "$default",
+        "time": "01/Mar/2025:19:28:01 +0000",
+        "timeEpoch": 1740857281836
+    },
+    "body": "{\"username\":\"pappitroll\",\"elapsed_seconds\":305,\"success_count\":0}",
+    "isBase64Encoded": false
+}

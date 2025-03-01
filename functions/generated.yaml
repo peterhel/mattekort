@@ -1,0 +1,177 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  # DynamoDB Table
+  ScoresTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ScoresTable
+      AttributeDefinitions:
+        - AttributeName: username
+          AttributeType: S
+      KeySchema:
+        - AttributeName: username
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  # IAM Role for Lambda
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: DynamoDBAccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !GetAtt ScoresTable.Arn
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+
+  # Lambda Function
+  ScoreCalculatorLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: ScoreCalculatorFunction
+      Runtime: python3.13
+      Handler: handler.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import math
+          import boto3
+          import json
+          import os
+
+          # Initialize AWS DynamoDB client
+          dynamodb = boto3.resource('dynamodb')
+          table_name = os.getenv('DYNAMODB_TABLE', 'ScoresTable')  # Use environment variable or default name
+          table = dynamodb.Table(table_name)
+
+          def calculate_score(success_count, elapsed_seconds):
+              """
+              Calculate the score based on success_count and elapsed_seconds.
+              Uses a logarithmic formula to make the score more exciting.
+              """
+              if elapsed_seconds <= 0:
+                  return 0
+              raw_score = success_count / elapsed_seconds
+              score = math.log(1 + raw_score) * 100  # Logarithmic scaling
+              return round(score, 2)
+
+          def lambda_handler(event, context):
+              """
+              AWS Lambda handler function.
+              """
+              try:
+                  # Handle payload for Lambda Function URL
+                  if 'body' in event:
+                      # Extract the body and parse JSON
+                      body = json.loads(event['body'])
+                  else:
+                      # Assume the event itself is the payload
+                      body = event
+
+                  # Extract parameters from the parsed body
+                  username = body['username']
+                  elapsed_seconds = body['elapsed_seconds']
+                  success_count = body['success_count']
+
+                  # Calculate the score
+                  score = calculate_score(success_count, elapsed_seconds)
+
+                  # Prepare the payload to store
+                  payload = {
+                      'username': username,
+                      'elapsed_seconds': elapsed_seconds,
+                      'success_count': success_count,
+                      'score': score
+                  }
+
+                  # Store the payload in DynamoDB
+                  table.put_item(Item=payload)
+
+                  # Return the response
+                  return {
+                      'statusCode': 200,
+                      'headers': {
+                          'Content-Type': 'application/json'
+                      },
+                      'body': json.dumps({
+                          'message': 'Score calculated and stored successfully.',
+                          'score': score
+                      })
+                  }
+              except Exception as e:
+                  return {
+                      'statusCode': 500,
+                      'headers': {
+                          'Content-Type': 'application/json'
+                      },
+                      'body': json.dumps({
+                          'message': 'An error occurred.',
+                          'error': str(e)
+                      })
+                  }
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: ScoresTable
+
+  # Lambda URL
+  LambdaUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !GetAtt ScoreCalculatorLambda.Arn
+      Cors:
+        AllowOrigins:
+          - "*" # Replace "*" with specific origins if needed
+        AllowMethods:
+          - GET
+          - POST
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+          - X-Amz-Date
+          - X-Api-Key
+          - X-Amz-Security-Token
+        MaxAge: 86400 # Cache preflight response for 1 day
+
+  # Lambda URL Permission
+  LambdaUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ScoreCalculatorLambda
+      Action: lambda:InvokeFunctionUrl
+      Principal: "*"
+
+Outputs:
+  LambdaUrlEndpoint:
+    Description: "The URL endpoint for the Lambda function"
+    Value: !GetAtt LambdaUrl.FunctionUrl
+  DynamoDBTableName:
+    Description: "The name of the DynamoDB table"
+    Value: !Ref ScoresTable
+  LambdaFunctionName:
+    Description: "The name of the Lambda function"
+    Value: !Ref ScoreCalculatorLambda

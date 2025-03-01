@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  # DynamoDB Table
+  ScoresTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ScoresTable
+      AttributeDefinitions:
+        - AttributeName: username
+          AttributeType: S
+      KeySchema:
+        - AttributeName: username
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  # IAM Role for Lambda
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: DynamoDBAccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !GetAtt ScoresTable.Arn
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+
+  # Lambda Function
+  ScoreCalculatorLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: ScoreCalculatorFunction
+      Runtime: python3.13
+      Handler: handler.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          CONTENT
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: ScoresTable
+
+  # Lambda URL
+  LambdaUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !GetAtt ScoreCalculatorLambda.Arn
+  LambdaUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ScoreCalculatorLambda
+      Action: lambda:InvokeFunctionUrl
+      Principal: "*"
+Outputs:
+  LambdaUrlEndpoint:
+    Description: "The URL endpoint for the Lambda function"
+    Value: !GetAtt LambdaUrl.FunctionUrl
+  DynamoDBTableName:
+    Description: "The name of the DynamoDB table"
+    Value: !Ref ScoresTable
+  LambdaFunctionName:
+    Description: "The name of the Lambda function"
+    Value: !Ref ScoreCalculatorLambda
