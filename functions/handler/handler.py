@@ -36,7 +36,7 @@ def lambda_handler(event, context):
     AWS Lambda handler function.
     """
     try:
-        http_method = event.get('httpMethod', 'POST')  # Default to POST if not specified
+        http_method = event.get('requestContext').get('http').get('method')  # Default to POST if not specified
 
         if http_method == 'POST':
             # Handle POST request
