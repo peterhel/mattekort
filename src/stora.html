@@ -465,7 +465,7 @@ function updateHighscore(scores, currentScore, preview = true) {
         // Show top 10 including the user's score
         scores.slice(0, maxDisplay).forEach((scoreEntry, index) => {
             const row = document.createElement('tr');
-            row.style.backgroundColor = scoreEntry.username === username ? 'yellow':undefined;
+            row.style.backgroundColor = scoreEntry.username === username ? scoreEntry.current ? 'yellow' : 'lightsalmon':undefined;
 
             const rankCell = document.createElement('td');
             rankCell.innerText = index + 1; // Rank starts at 1
