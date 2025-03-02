@@ -57,7 +57,7 @@
 
             if (response.ok) {
                 const result = await response.json();
-                alert('Statistik postad framgångsrikt! Poäng: ' + result.score);
+                //alert('Statistik postad framgångsrikt! Poäng: ' + result.score);
 
                 // Visualize the highscore in the stats view
                 updateHighscore(result.scores, null, false);
