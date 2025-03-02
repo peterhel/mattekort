@@ -9,7 +9,7 @@
             <div id="stats" style="display:none">
                 <div id="stats-content">
                     <div id="summary"></div>
-                    <button id="toggle-stats-details" style="margin: 10px">Visa detaljer</button>
+                    <button id="toggle-stats-details" class="btn-secondary">Visa detaljer</button>
                     <div id="stats-details" style="display:none;">
                         <table>
                             <tbody></tbody>
@@ -20,7 +20,7 @@
 
                     </div>
 
-<button id="post-stats" style="margin: 10px">Posta statistik</button>
+<button id="post-stats" class="btn-secondary" style="margin: 10px">Posta statistik</button>
 <script>
     document.getElementById('post-stats').addEventListener('click', async function () {
         // Retrieve username from local storage or prompt the user
@@ -610,6 +610,16 @@ function updateHighscore(scores, currentScore, preview = true) {
             font-family: "Short_Stack variant0", Tofu;
         }
 
+        button {
+            font-family: "Short_Stack variant0", Tofu;
+        }
+
+        .btn-secondary{
+            background-color: lightgoldenrodyellow;
+            color: black;
+            border: 2px solid black;padding: 8px; text-align: center; margin: 10px
+        }
+
         #question-wrapper {
             margin-top: 30px;
             border: 1px solid black;
@@ -733,6 +743,8 @@ function updateHighscore(scores, currentScore, preview = true) {
             margin: 10pt;
             padding: 10pt;
             border: 2px solid black;
+            display: flex;
+            flex-direction: column;
         }
 
 .result-0{
