@@ -1,0 +1,769 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+</head>
+
+<body style="margin:0">
+            <div id="stats" style="display:none">
+                <div id="stats-content">
+                    <div id="summary"></div>
+                    <button id="toggle-stats-details" class="btn-secondary">Visa detaljer</button>
+                    <div id="stats-details" style="display:none;">
+                        <table>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <div id="highscore">
+
+                    </div>
+
+<button id="post-stats" class="btn-secondary" style="margin: 10px">Spara highscore</button>
+<script>
+    document.getElementById('post-stats').addEventListener('click', async function () {
+        // Retrieve username from local storage or prompt the user
+        let username = localStorage.getItem('username');
+        if (!username) {
+            username = prompt('Ange ditt användarnamn:');
+            if (!username) {
+                alert('Användarnamn krävs för att posta statistik.');
+                return;
+            }
+            localStorage.setItem('username', username);
+        }
+
+        // Prepare the payload
+        const elapsedSeconds = (window.stats.data.elapsed.minutes * 60) + window.stats.data.elapsed.seconds;
+        const successCount = window.stats.data.right;
+
+        const payload = {
+            username: username,
+            elapsed_seconds: elapsedSeconds,
+            success_count: successCount
+        };
+
+        // Post the stats to the given URL
+        const url = 'https://xhrd6j4gv5msjyyq5k2pky62pm0pmagx.lambda-url.eu-north-1.on.aws/';
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                //alert('Statistik postad framgångsrikt! Poäng: ' + result.score);
+
+                // Visualize the highscore in the stats view
+                updateHighscore(result.scores, null, false);
+            } else {
+                alert('Fel uppstod vid postning av statistik.');
+            }
+        } catch (error) {
+            console.error('Error posting stats:', error);
+            alert('Ett fel uppstod vid anslutning till servern.');
+        }
+    });
+
+
+</script>
+                    <div style="border: 2px solid black; padding: 8px; text-align: center; background-color:cornflowerblue">
+                        <a style="color:white" href="javascript:location.reload()">EN GÅNG TILL!!!</a>
+                    </div>
+                </div>
+            </div>        <div id="header">
+            <div style="padding:6px;text-align:center; position:absolute;z-index:1000;width:100%">
+                <h1 style="margin-bottom: 4px;color:lightgoldenrodyellow">Stora</h1>
+                <a href="index.html">Byt till lilla</a>
+            </div>
+        <div style="display:flex; height:100px; position:relative">
+            <div id="correct" style="background-color:lightgreen; width:100%; color:white;text-align:center;font-size:5em">0
+        </div>
+        <div id="wrong" style="background-color:lightcoral; width:100%; color:white;text-align:center;font-size:5em">0
+        </div>
+    </div>
+    </div>
+    <div id="app">
+    <div id="question-wrapper">
+            <div id="question">? + ? = ?</div>
+        </div>
+        <div id="answers"></div>
+    </div>
+    <script>
+        class Stats {
+                constructor() {
+                    this.element = document.getElementById('stats')
+                    this.content = document.getElementById('stats-content')
+                    this.tableElement = this.element.querySelector('tbody')
+                    this.data = {
+                        right: 0,
+                        wrong: 0,
+                        fixed: 0,
+                        questions: []
+                    }
+                }
+
+
+                hide() {
+                    this.element.style.display = 'none'
+                }
+                show() {
+                    this.refreshUI();
+                    this.element.style.display = 'block'
+                }
+
+                allAnswered() {
+                    return this.data.right + this.data.fixed + this.data.wrong === 30
+                }
+
+                right(question) {
+                    const alreadyAnswered = this.data.questions.find(x => x[0] === question[0])
+                    if(alreadyAnswered) {
+                        this.fixed(alreadyAnswered)
+                    } else {
+                        this.data.right++
+                        this.data.questions.push({result: 1, ...question})
+                    }
+                }
+
+                fixed(alreadyAnswered) {
+                    alreadyAnswered.result = 2
+                    this.data.fixed++
+                    this.data.wrong--
+                }
+
+                wrong(question) {
+                const alreadyAnswered = this.data.questions.find(x => x[0] === question[0])
+                    if(alreadyAnswered) {
+
+                    } else {
+                        this.data.wrong++
+                        this.data.questions.push({result: 0, ...question})
+                    }
+
+                }
+
+            refreshUI() {
+                const elapsed = document.getElementById('summary')
+                elapsed.classList.add('wow')
+                elapsed.innerText = `Wow! Du klarade ${this.data.questions.length} tal på ${this.data.elapsed.minutes > 0 ? this.data.elapsed.minutes + ' minuter och ': '' } ${this.data.elapsed.seconds} sekunder!`
+                this.content.prepend(elapsed)
+                for(let q of this.data.questions) {
+                    console.log(q)
+                    const tr = document.createElement('tr')
+                    const th = document.createElement('th')
+                    const td = document.createElement('td')
+
+                    th.innerText = q[0] + ' = ' + q.number
+                    th.classList.add(`result-${q.result}`)
+
+                    tr.appendChild(th)
+                    tr.appendChild(td)
+                    this.tableElement.appendChild(tr)
+                }
+            }
+
+            setElapsed(elapsed) {
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                this.data.elapsed = {minutes, seconds}
+            }
+        }
+
+        document.getElementById('toggle-stats-details').addEventListener('click', function () {
+            const statsContent = document.getElementById('stats-details');
+            if (statsContent.style.display === 'none') {
+                statsContent.style.display = 'block';
+                this.innerText = 'Dölj detaljer';
+            } else {
+                statsContent.style.display = 'none';
+                this.innerText = 'Visa detaljer';
+            }
+        });
+        window.stats = new Stats()
+
+        const classLists = []
+
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+
+            // While there remain elements to shuffle.
+            while (currentIndex > 0) {
+
+                // Pick a remaining element.
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+
+                // And swap it with the current element.
+                [array[currentIndex], array[randomIndex]] = [
+                    array[randomIndex], array[currentIndex]];
+            }
+
+            return array;
+        }
+
+        function gotov2(e) {
+            localStorage.setItem('version', '2')
+            location.href = '/handskrift.html'
+        }
+
+        const appEl = document.querySelector('#app')
+        const correctEl = document.querySelector('#correct')
+        const wrongEl = document.querySelector('#wrong')
+        let qualifiers = [['+', x => x * 1], ['-', x => x * -1]]
+        let questions = []
+        for (let qual of qualifiers) {
+            for (let i = 3; i < 20; i++) {
+                for (let j = 3; j < 20; j++) {
+
+                    if(i < 10 && j < 10) {
+                        continue
+                    }
+
+                    if (i == j)
+                        continue
+
+                    let a = i, b = j;
+                    let c = a + qual[1](b)
+
+                    if (c > 0 && c < 20)
+                        questions.push([`${a} ${qual[0]} ${b}`, { q: qual[0], a: a, b: b, c: c }, 'stora'])
+
+                    c = b + qual[1](a)
+                    if (c > 0 && c < 20)
+                        questions.push([`${b} ${qual[0]} ${a}`, { q: qual[0], a: b, b: a, c: c }, 'stora'])
+
+                }
+            }
+        }
+
+        questions = shuffle(questions)
+        console.log(questions.map(x => x[0]))
+        currentQuestion = null;
+        let q = document.querySelector('#question')
+        let a = document.querySelector('#answers')
+        classLists.push(q.classList)
+
+        function nextQuestion() {
+            correctEl.innerText = correct.length
+            wrongEl.innerText = wrong.length
+
+            currentQuestion = questions.pop()
+            console.log(currentQuestion)
+            if (currentQuestion == null)
+                {
+                    q.innerText = 'Bra jobbat!!';
+                    window.stats.setElapsed(Date.now() - started)
+                    window.stats.show();
+                    return;
+                }
+            let [text, conf, type] = currentQuestion
+            q.innerText = `${text} = ?`
+
+            if (conf.q === '+') {
+                classLists.forEach(x => {
+                    x.add('plus')
+                    x.remove('lilla')
+                    x.remove('stora')
+                    x.add(type)
+                    x.remove('minus')
+                })
+            } else {
+                classLists.forEach(x => {
+                    x.add('minus')
+                    x.remove('lilla')
+                    x.remove('stora')
+                    x.add(type)
+                    x.remove('plus')
+                })
+            }
+        }
+
+        const correct = []
+        const wrong = []
+        const thumbImg = document.createElement('img');
+        thumbImg.style.position = 'absolute';
+        thumbImg.style.left = window.innerWidth / 2 + 'px'
+        thumbImg.style.top = '20vh'
+        thumbImg.style.width = 0
+        thumbImg.style.height = 0
+        document.body.appendChild(thumbImg)
+
+        thumbImg.addEventListener('animationend', e => {
+            thumbImg.style.animation = ''
+            nextQuestion()
+        })
+
+        function animateCorrect(el, _question) {
+            thumbImg.src = 'thumb.webp';
+            thumbImg.style.left = (el.x + 25) + 'px';
+            thumbImg.style.top = (el.y - 35) + 'px';
+            thumbImg.style.animation = 'rl .2s 1';
+        }
+
+        function animateWrong(el, _question) {
+            thumbImg.src = 'poop.webp';
+            thumbImg.style.left = el.x + 'px';
+            thumbImg.style.top = el.y + 'px';
+            thumbImg.style.animation = 'poop .2s 1';
+        }
+
+        let started = null
+
+        function answer(e, number) {
+            if(started === null) 
+                started = Date.now()
+
+            q.innerText = q.innerText.slice(0, -1) + currentQuestion[1].c
+
+            if (currentQuestion[1].c === number) {
+                correct.unshift(currentQuestion)
+                animateCorrect(e, currentQuestion)
+                stats.right({number, ...currentQuestion})
+            } else {
+                wrong.unshift(currentQuestion)
+                animateWrong(e, currentQuestion)
+                stats.wrong({number, ...currentQuestion})
+            }
+
+            let elapsed = Date.now() - started
+            const runTime = 1000 * 60 * 2; // 2 minuter
+//            const runTime = 1000 * 15; // 15 sekunder
+
+            if(elapsed > runTime) {
+                questions.splice(0, questions.length, wrong.pop())
+            }
+        }
+
+        function load() {
+            try {
+                const version = localStorage.getItem('version')
+
+                //if(version === '2') {
+                //    location.href = '/handskrift.html'
+                //}
+            } catch(_) {
+             // ignore
+            }
+
+            let qb = q.getBoundingClientRect()
+            //q.style.left = `${(window.innerWidth - qb.width) / 2}px`
+            // q.style.top = `${(window.innerHeight - qb.height) / 2}px`
+            qb = q.getBoundingClientRect()
+
+            let left = qb.left
+            let width = 68
+            let pad = (qb.width - width - 2) / 4
+
+            for (let i = 1; i <= 19; i++) {
+                let height = 68;
+                console.log(left)
+                let y = qb.top - (height + 12) + ((qb.height + height + 22) * (i / 5 | 0))
+                let numberEl = document.createElement('div');
+                /*  numberEl.style.position = 'absolute'  */
+                numberEl.style.width = width + 'px'
+                numberEl.style.height = height + 'px'
+                /*  numberEl.style.left = left + 'px'  */
+                /*  numberEl.style.top = y + 'px'  */
+                numberEl.className = 'number'
+                classLists.push(numberEl.classList)
+                numberEl.addEventListener('click', e => answer(e, i))
+
+                numberEl.innerText = `${i}`;
+                console.log(i)
+                a.appendChild(numberEl)
+                left += (pad)
+                if (i == 4)
+                    left = qb.left
+            }
+
+            nextQuestion()
+        }
+        window.addEventListener('load', load)
+    </script>
+    <script>
+        const url = 'https://xhrd6j4gv5msjyyq5k2pky62pm0pmagx.lambda-url.eu-north-1.on.aws/';
+
+        // Function to calculate the score
+        function calculateScore(successCount, elapsedSeconds) {
+            if (elapsedSeconds <= 0) return 0;
+            const rawScore = successCount / elapsedSeconds;
+            return Math.floor(Math.log(1 + rawScore) * 100 * 100); // Multiply by 100 and round down
+        }        // Function to calculate the score
+        // Fetch highscore from the server
+        async function fetchHighscore() {
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    return result.scores || [];
+                } else {
+                    console.error('Failed to fetch highscore:', response.statusText);
+                    return [];
+                }
+            } catch (error) {
+                console.error('Error fetching highscore:', error);
+                return [];
+            }
+        }
+
+        // Update the highscore display
+        // Update the highscore display
+function updateHighscore(scores, currentScore, preview = true) {
+    const highscoreDiv = document.getElementById('highscore');
+    highscoreDiv.innerHTML = ''; // Clear previous content
+
+    const highscoreTitle = document.createElement('h3');
+    highscoreTitle.innerText = 'Highscore';
+    highscoreTitle.style.textAlign = 'center';
+    highscoreDiv.appendChild(highscoreTitle);
+
+    const table = document.createElement('table');
+    table.style.width = '100%';
+    table.style.borderCollapse = 'collapse';
+
+    // Add table headers
+    const headerRow = document.createElement('tr');
+    const headers = ['Rank', 'Username', 'Score'];
+    headers.forEach(header => {
+        const th = document.createElement('th');
+        th.innerText = header;
+        th.style.border = '1px solid black';
+        th.style.padding = '5px';
+        th.style.textAlign = 'center';
+        th.style.backgroundColor = '#f2f2f2';
+        headerRow.appendChild(th);
+    });
+    table.appendChild(headerRow);
+
+    // Retrieve the username from localStorage
+    const username = localStorage.getItem('username') || 'din poäng';
+
+    // Inject the current score into the sorted scores
+    const currentEntry = { username: username, score: currentScore, current: true };
+    if(preview) {
+        scores.push(currentEntry);
+    }
+    scores.sort((a, b) => parseInt(b.score) - parseInt(a.score)); // Sort by score descending
+
+    // Add scores to the table
+    const maxDisplay = 10;
+    const userRank = scores.findIndex(entry => entry.current) + 1;
+
+    if (userRank <= maxDisplay) {
+        // Show top 10 including the user's score
+        scores.slice(0, maxDisplay).forEach((scoreEntry, index) => {
+            const row = document.createElement('tr');
+            row.style.backgroundColor = scoreEntry.username === username ? scoreEntry.current ? 'yellow' : 'lightsalmon':undefined;
+
+            const rankCell = document.createElement('td');
+            rankCell.innerText = index + 1; // Rank starts at 1
+            rankCell.style.border = '1px solid black';
+            rankCell.style.padding = '5px';
+            rankCell.style.textAlign = 'center';
+
+            const usernameCell = document.createElement('td');
+            usernameCell.innerText = scoreEntry.username;
+            usernameCell.style.border = '1px solid black';
+            usernameCell.style.padding = '5px';
+            usernameCell.style.textAlign = 'center';
+
+            const scoreCell = document.createElement('td');
+            scoreCell.innerText = scoreEntry.score;
+            scoreCell.style.border = '1px solid black';
+            scoreCell.style.padding = '5px';
+            scoreCell.style.textAlign = 'center';
+
+            row.appendChild(rankCell);
+            row.appendChild(usernameCell);
+            row.appendChild(scoreCell);
+
+            table.appendChild(row);
+        });
+    } else {
+        // Show top 1 and the user's position
+        const topEntry = scores[0];
+        const userEntry = scores[userRank - 1];
+
+        [topEntry, userEntry].forEach((scoreEntry, index) => {
+            const row = document.createElement('tr');
+
+            const rankCell = document.createElement('td');
+            rankCell.innerText = index === 0 ? 1 : userRank; // Rank for top and user
+            rankCell.style.border = '1px solid black';
+            rankCell.style.padding = '5px';
+            rankCell.style.textAlign = 'center';
+
+            const usernameCell = document.createElement('td');
+            usernameCell.innerText = scoreEntry.username;
+            usernameCell.style.border = '1px solid black';
+            usernameCell.style.padding = '5px';
+            usernameCell.style.textAlign = 'center';
+
+            const scoreCell = document.createElement('td');
+            scoreCell.innerText = scoreEntry.score;
+            scoreCell.style.border = '1px solid black';
+            scoreCell.style.padding = '5px';
+            scoreCell.style.textAlign = 'center';
+
+            row.appendChild(rankCell);
+            row.appendChild(usernameCell);
+            row.appendChild(scoreCell);
+
+            table.appendChild(row);
+
+            if (index === 0) {
+                const dotsRow = document.createElement('tr');
+                const dotsCell = document.createElement('td');
+                dotsCell.colSpan = 3;
+                dotsCell.innerText = '...';
+                dotsCell.style.textAlign = 'center';
+                dotsRow.appendChild(dotsCell);
+                table.appendChild(dotsRow);
+            }
+        });
+    }
+
+    highscoreDiv.appendChild(table);
+}
+
+        // Update the stats display to include the score
+        function updateStatsDisplay() {
+            const elapsedSeconds = (window.stats.data.elapsed.minutes * 60) + window.stats.data.elapsed.seconds;
+            const successCount = window.stats.data.right;
+
+            // Calculate the score
+            const score = calculateScore(successCount, elapsedSeconds);
+
+            // Find or create the score display element
+            let scoreElement = document.getElementById('score-display');
+            if (!scoreElement) {
+                scoreElement = document.createElement('div');
+                scoreElement.id = 'score-display';
+                scoreElement.style.marginTop = '10px';
+                scoreElement.style.fontSize = '1.5em';
+                scoreElement.style.fontWeight = 'bold';
+                scoreElement.style.textAlign = 'center';
+                document.getElementById('stats-content').appendChild(scoreElement);
+            }
+
+            // Update the score display
+            scoreElement.innerText = `Din beräknade poäng: ${score}`;
+        }
+
+        // Hook into the Stats class to update the score display
+        Stats.prototype.refreshUI = (function (originalRefreshUI) {
+            return function () {
+                originalRefreshUI.apply(this, arguments); // Call the original refreshUI method
+                updateStatsDisplay(); // Update the score display
+            };
+        })(Stats.prototype.refreshUI);
+
+        // Hook into the Stats class to fetch and display the highscore
+        Stats.prototype.show = (function (originalShow) {
+            return async function () {
+                if(!this.data.elapsed){
+                    this.setElapsed(Date.now() - started)
+                }
+
+                const elapsedSeconds = (this.data.elapsed.minutes * 60) + this.data.elapsed.seconds;
+                const successCount = this.data.right;
+
+                // Calculate the current score
+                const currentScore = calculateScore(successCount, elapsedSeconds);
+
+                // Fetch the highscore
+                const scores = await fetchHighscore();
+
+                // Update the highscore display
+                updateHighscore(scores, currentScore);
+
+                // Call the original show method
+                originalShow.apply(this, arguments);
+            };
+        })(Stats.prototype.show);
+    </script>
+    <style>
+        #app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @font-face {
+            font-family: 'Short_Stack variant0';
+            src: url(https://fonts.gstatic.com/s/shortstack/v15/bMrzmS2X6p0jZC6EcmPFX9SVe34h0Wq7.woff2) format('woff2');
+        }
+
+        body {
+            font-family: "Short_Stack variant0", Tofu;
+        }
+
+        button {
+            font-family: "Short_Stack variant0", Tofu;
+        }
+
+        .btn-secondary{
+            background-color: lightgoldenrodyellow;
+            color: black;
+            border: 2px solid black;padding: 8px; text-align: center; margin: 10px
+        }
+
+        #question-wrapper {
+            margin-top: 30px;
+            border: 1px solid black;
+            text-align: center;
+            width: 80vw;
+            display: flex;
+            align-content: center;
+            flex-direction: column;
+        }
+
+        #question {
+            height: 100%;
+            font-size: 3rem;
+        }
+
+        .minus.lilla {
+            background-color: lightpink;
+        }
+
+        .plus.lilla {
+            background-color: lightyellow;
+        }
+
+        .minus.stora {
+            background-color: turquoise;
+        }
+
+        .plus.stora {
+            background-color: orange;
+        }
+
+
+        .number {
+            padding-top: 2px;
+            font-size: 3rem;
+            text-align: center;
+            border: 1px solid black;
+        }
+
+        #answers {
+            width: 80vw;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 10px;
+            justify-content: space-between;
+        }
+
+        @keyframes rl {
+            10% {
+                margin-top: -66px;
+                margin-left: -80px;
+                height: 160px;
+                width: 132px
+            }
+
+            50% {
+                margin-top: -66px;
+                margin-left: -80px;
+                height: 160px;
+                width: 132px
+            }
+
+            90% {
+                margin-top: -66px;
+                margin-left: -80px;
+                height: 160px;
+                width: 132px
+            }
+
+            100% {
+                height: 0;
+                width: 0
+            }
+        }
+        @keyframes poop {
+            10% {
+                margin-top: -80px;
+                margin-left: -80px;
+                height: 160px;
+                width: 160px
+            }
+
+            50% {
+                margin-top: -80px;
+                margin-left: -80px;
+                height: 160px;
+                width: 160px
+            }
+
+            90% {
+                margin-top: -80px;
+                margin-left: -80px;
+                height: 160px;
+                width: 160px
+            }
+
+            100% {
+                height: 0;
+                width: 0;
+            }
+
+        }
+
+        .wow {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        #stats {
+            position: absolute;
+            z-index: 5000;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0,0,0, .3);
+
+        }
+
+        #stats-content{
+            background-color: rgba(255,255,255);
+            margin: 10pt;
+            padding: 10pt;
+            border: 2px solid black;
+            display: flex;
+            flex-direction: column;
+        }
+
+.result-0{
+    background-color:rgba(255,0,0,.2) ;
+ }
+        .result-1{
+            background-color:rgba(0,255,0,.2) ;
+        }
+        .result-0:after{
+            content: 'F';
+        }
+        .result-1:after{
+            content: 'R';
+
+        }
+        .result-2:after{
+            content: 'R';
+        }
+</style>
+</body>
+
+</html>
