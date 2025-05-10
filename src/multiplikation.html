@@ -262,6 +262,13 @@
                 }
             }
             inputDisplay.textContent = currentInput;
+            
+            // Check if the current input matches the correct answer
+            if (currentQuestion && parseInt(currentInput) === currentQuestion[1].c) {
+                // Find the submit button and simulate a click
+                const submitButton = document.querySelector('.submit-button');
+                submitButton.click();
+            }
         }
 
         function clearInput() {
